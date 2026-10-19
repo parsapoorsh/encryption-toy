@@ -8,8 +8,8 @@ import os
 from libgarbler import decrypt, encrypt
 from printer import BLOCK_SIZE, block_brackets, print_hex
 
-key1 = os.urandom(16)
-key2 = os.urandom(16)
+key1 = os.urandom(32)
+key2 = os.urandom(32)
 nonce = bytes.fromhex("00000000000000000000000000000000")
 
 N_BLOCKS = 6

@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 def ctr_toggle(key: bytes, nonce: bytes, data: bytes) -> bytes:
-    enc = Cipher(algorithms.AES(key), modes.CTR(nonce)).encryptor()
+    enc = Cipher(algorithms.AES256(key), modes.CTR(nonce)).encryptor()
     return enc.update(data) + enc.finalize()
 
 
@@ -27,7 +27,7 @@ def encrypt(key1: bytes, key2: bytes, nonce: bytes, plain_text: bytes) -> bytes:
 
     def lock(key2: bytes, seed: bytes, data: bytes) -> bytes:
         def ecb_encrypt(key: bytes, data: bytes) -> bytes:
-            enc = Cipher(algorithms.AES(key), modes.ECB()).encryptor()
+            enc = Cipher(algorithms.AES256(key), modes.ECB()).encryptor()
             return enc.update(data) + enc.finalize()
 
         h = sha256(seed).digest()
@@ -61,7 +61,7 @@ def decrypt(key1: bytes, key2: bytes, nonce: bytes, cipher_text: bytes) -> bytes
     def unlock(key2: bytes, seed: bytes, data: bytes) -> bytes:
         # reverse of lock
         def ecb_decrypt(key: bytes, data: bytes) -> bytes:
-            dec = Cipher(algorithms.AES(key), modes.ECB()).decryptor()
+            dec = Cipher(algorithms.AES256(key), modes.ECB()).decryptor()
             return dec.update(data) + dec.finalize()
 
         h = sha256(seed).digest()
