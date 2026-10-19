@@ -10,7 +10,7 @@ from printer import BLOCK_SIZE, block_brackets, print_hex
 
 key1 = os.urandom(32)
 key2 = os.urandom(32)
-nonce = bytes.fromhex("00000000000000000000000000000000")
+nonce = os.urandom(16)
 
 N_BLOCKS = 6
 
