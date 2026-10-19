@@ -14,7 +14,7 @@ def ctr_toggle(key: bytes, nonce: bytes, data: bytes) -> bytes:
 
 
 def encrypt(key1: bytes, key2: bytes, nonce: bytes, plain_text: bytes) -> bytes:
-    # intermediate = CTR(key1, nonce, p)
+    # intermediate = CTR(key1, nonce, plain-text)
     # head || tail = intermediate
     #
     # lock(key, seed, data) = ECB_E(key2, ECB_E(HASH(seed), data))
@@ -56,7 +56,8 @@ def decrypt(key1: bytes, key2: bytes, nonce: bytes, cipher_text: bytes) -> bytes
     # head = unlock(key2, tail, head)   # undo 2
     # tail = unlock(key2, head, tail)   # undo 1
     #
-    # plain-text = CTR(key1, nonce, head || tail)
+    # intermediate = head || tail
+    # plain-text = CTR(key1, nonce, intermediate)
 
     def unlock(key2: bytes, seed: bytes, data: bytes) -> bytes:
         # reverse of lock
