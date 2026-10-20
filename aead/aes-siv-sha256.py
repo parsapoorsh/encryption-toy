@@ -152,6 +152,15 @@ if __name__ == "__main__":
     ct2, t2 = encrypt_aead(KEY_TAG, KEY_ENC, plain_text, associated_data, nonce)
     assert tag == t2 and cipher_text == ct2
 
+    # no equality leak: different meta data -> different tag
+    ad3 = b"different"
+    ct3, t3 = encrypt_aead(KEY_TAG, KEY_ENC, plain_text, ad3, nonce)
+    assert tag != t3 and cipher_text != ct3
+    print("EAssociated Data:", ad3.hex())
+    print("ECipher Text    :", ct3.hex())
+    print("ETAG            :", t3.hex())
+    print()
+
     # tamper check
     try:
         decrypt_aead(KEY_TAG, KEY_ENC, cipher_text, tag, b"tampered", nonce)
