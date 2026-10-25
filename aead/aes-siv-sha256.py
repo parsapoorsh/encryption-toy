@@ -61,6 +61,23 @@ def get_ctr_nonce(tag: bytes):
     return ctr_nonce
 
 
+def check_sizes(
+    k_tag: bytes,
+    k_enc: bytes,
+    text: bytes,
+    associated_data: bytes,
+    nonce: bytes,
+):
+    if len(k_tag) != KEY_SIZE or len(k_enc) != KEY_SIZE:
+        raise ValueError(f"key must be {KEY_SIZE} bytes")
+    if len(text) > MAX_PLAINTEXT_BYTES:
+        raise ValueError("plain/cipher text too long")
+    if len(associated_data) > MAX_AD_BYTES:
+        raise ValueError("associated data too long")
+    if len(nonce) != MAX_NONCE_BYTES:
+        raise ValueError(f"nonce must be {MAX_NONCE_BYTES} bytes")
+
+
 def encrypt_aead(
     k_tag: bytes,
     k_enc: bytes,
@@ -68,14 +85,13 @@ def encrypt_aead(
     associated_data: bytes,
     nonce: bytes,
 ) -> tuple[bytes, bytes]:
-    if len(k_tag) != KEY_SIZE or len(k_enc) != KEY_SIZE:
-        raise ValueError(f"key must be {KEY_SIZE} bytes")
-    if len(nonce) != MAX_NONCE_BYTES:
-        raise ValueError(f"nonce must be {MAX_NONCE_BYTES} bytes")
-    if len(associated_data) > MAX_AD_BYTES:
-        raise ValueError("associated data too long")
-    if len(plain_text) > MAX_PLAINTEXT_BYTES:
-        raise ValueError("plaintext too long")
+    check_sizes(
+        k_tag,
+        k_enc,
+        plain_text,
+        associated_data,
+        nonce,
+    )
 
     # tag-then-encrypt; tag is the synthetic IV
     tag = compute_tag(
@@ -98,17 +114,15 @@ def decrypt_aead(
     associated_data: bytes,
     nonce: bytes,
 ) -> bytes:
-
-    if len(k_tag) != KEY_SIZE or len(k_enc) != KEY_SIZE:
-        raise ValueError(f"key must be {KEY_SIZE} bytes")
+    check_sizes(
+        k_tag,
+        k_enc,
+        cipher_text,
+        associated_data,
+        nonce,
+    )
     if len(tag) != TAG_SIZE:
         raise ValueError("invalid tag size")
-    if len(nonce) != MAX_NONCE_BYTES:
-        raise ValueError(f"nonce must be {MAX_NONCE_BYTES} bytes")
-    if len(associated_data) > MAX_AD_BYTES:
-        raise ValueError("associated data too long")
-    if len(cipher_text) > MAX_PLAINTEXT_BYTES:
-        raise ValueError("ciphertext too long")
 
     ctr_nonce = get_ctr_nonce(tag)
     plain_text = ctr_crypt(k_enc, ctr_nonce, cipher_text)
