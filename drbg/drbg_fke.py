@@ -21,6 +21,7 @@ KEYLEN = 32
 BLOCKLEN = 16
 N_BLOCKS = 48
 OUTLEN = (N_BLOCKS - 2) * BLOCKLEN  # 736
+SEEDLEN = N_BLOCKS * BLOCKLEN
 
 
 def wipe(buf: bytearray) -> None:
@@ -38,14 +39,17 @@ class FastKeyErasureRNG:
         self.buf = bytearray()
         self.pos = 0
 
-    def refill(self) -> None:
+    def update(self, provided_data: bytes) -> None:
+        if len(provided_data) != SEEDLEN:
+            raise ValueError("provided_data must be seedlen bytes")
+
         # B0...B47 = AES_k(0)...AES_k(47) via AES-256-CTR with zero IV
         encryptor = Cipher(
             algorithms.AES(bytes(self.key)),
             modes.CTR(b"\x00" * BLOCKLEN),
         ).encryptor()
         stream = bytearray(
-            encryptor.update(b"\x00" * (N_BLOCKS * BLOCKLEN))
+            encryptor.update(provided_data)
             + encryptor.finalize()
         )
 
@@ -66,7 +70,7 @@ class FastKeyErasureRNG:
         filled = 0
         while filled < n:
             if self.pos >= len(self.buf):
-                self.refill()
+                self.update(b"\x00" * SEEDLEN)
             take = min(n - filled, len(self.buf) - self.pos)
             out[filled:filled + take] = self.buf[self.pos:self.pos + take]
             for i in range(self.pos, self.pos + take):
