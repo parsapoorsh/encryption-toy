@@ -10,30 +10,26 @@ import hmac
 hash_function = hashlib.sha256
 
 
-def hmac_digest(key: bytes, data: bytes) -> bytes:
-    return hmac.new(key, data, hash_function).digest()
-
-
-def hkdf_extract(salt: bytes, ikm: bytes) -> bytes:
+def hkdf_extract(salt: bytes, ikm: bytes, digestmod) -> bytes:
     if len(salt) == 0:
-        salt = bytes([0] * hash_function().digest_size)
-    return hmac_digest(salt, ikm)
+        salt = bytes([0] * digestmod().digest_size)
+    return hmac.new(salt, ikm, digestmod).digest()
 
 
-def hkdf_expand(prk: bytes, info: bytes, length: int) -> bytes:
+def hkdf_expand(prk: bytes, info: bytes, length: int, digestmod) -> bytes:
     t = b""
     okm = b""
     i = 0
     while len(okm) < length:
         i += 1
-        t = hmac_digest(prk, t + info + bytes([i]))
+        t = hmac.new(prk, t + info + bytes([i]), digestmod).digest()
         okm += t
     return okm[:length]
 
 
-def hkdf(salt: bytes, ikm: bytes, info: bytes, length: int) -> bytes:
-    prk = hkdf_extract(salt, ikm)
-    return hkdf_expand(prk, info, length)
+def hkdf(salt: bytes, ikm: bytes, info: bytes, length: int, digestmod) -> bytes:
+    prk = hkdf_extract(salt, ikm, digestmod)
+    return hkdf_expand(prk, info, length, digestmod)
 
 
 if __name__ == "__main__":
@@ -42,6 +38,7 @@ if __name__ == "__main__":
         ikm=bytes.fromhex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
         info=bytes.fromhex("f0f1f2f3f4f5f6f7f8f9"),
         length=42,
+        digestmod=hash_function,
     )
     assert okm == bytes.fromhex(
         "3cb25f25faacd57a90434f64d0362f2a"
@@ -55,6 +52,7 @@ if __name__ == "__main__":
         ikm=bytes.fromhex("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),
         info=b"",
         length=42,
+        digestmod=hash_function,
     ) == bytes.fromhex(
         "8da4e775a563c18f715f802a063c5a31"
         "b8a11f5c5ee1879ec3454e5f3c738d2d"
